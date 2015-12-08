@@ -1,5 +1,4 @@
-<!DOCTYPE html> 
-<meta charset = "utf-8" > 
+<!DOCTYPE html > <meta charset = "utf-8">
 
 <style>
 
@@ -14,16 +13,123 @@ body {
 }
 
 </style>
-<body>
+<head>
+<title >
+World Trade Network
+</title>	
+	
+</head>
+
+<button id = "Y2001" disabled="true">2001</button> 
+<button id = "Y2002">2002</button>
+<button id = "Y2003">2003</button> 
+<button id = "Y2004">2004</button> 
+<button id = "Y2005">2005</button> 
+<button id = "Y2006">2006</button> 
+<div id = "chart_placeholder" style="text-align:center;"></div>
+
 <script src= "d3/d3.js" > 
 </script>
 	
-<script>
 
-// From http: //mkweb.bcgsc.ca/circos/guide/tables/
+	
+<script>
 	var dataset = [];
 	var matrix = [];
-	d3.csv("Top/2001A.csv", function(data) {
+	var rawData = "Top/2001A.csv ";
+
+var width = 800,
+	height = 800,
+	innerRadius = Math.min(width, height) * .30,
+	outerRadius = innerRadius * 1.1;
+
+var colors = d3.scale.category20().range();
+	colors.push("#637939");
+
+var fill = d3.scale.ordinal()
+		.domain(d3.range(21))
+		.range(colors);
+
+var svg = d3.select("#chart_placeholder").append("svg")
+	.attr("width", width)
+	.attr("height", height)
+	.append("g")
+	.attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+
+/*svg.append("circle")
+    .attr("r", outerRadius);*/
+	
+function fade_single(opacity) {
+		return function() {
+			var me = this;
+			svg.selectAll("g.chord path")
+				.filter(function(d) {
+					return this != me;
+				})
+				.transition()
+				.style("opacity", opacity);
+		};
+	}
+
+	// Returns an array of tick angles and labels, given a group.
+
+function groupTicks(d) {
+		var k = (d.endAngle - d.startAngle) / d.value;
+		return d3.range(0, d.value, 1000).map(function(v, i) {
+			return {
+				angle: v * k + d.startAngle,
+				label: i % 5 ? null : v / 1000 + "k"
+			};
+		});
+	}
+
+	// Returns an event handler for fading a given chord group.
+
+function fade(opacity) {
+		return function(g, i) {
+			svg.selectAll(".chord path")
+				.filter(function(d) {
+					return d.source.index != i && d.target.index != i;
+				})
+				.transition()
+				.style("opacity", opacity);
+		};
+	}
+
+function getDefaultLayout() {
+	    return d3.layout.chord()
+	    .padding(0.03)
+	    .sortSubgroups(d3.descending)
+	    .sortChords(d3.ascending);
+	}
+
+function chordKey(data) {
+	    return (data.source.index < data.target.index) ?
+	        data.source.index  + "-" + data.target.index:
+	        data.target.index  + "-" + data.source.index;
+    
+	    //create a key that will represent the relationship
+	    //between these two groups *regardless*
+	    //of which group is called 'source' and which 'target'
+	}
+	
+var last_layout;
+
+function updateChords(rawData){
+	/*svg.append("circle")
+    	.attr("r", outerRadius+200)
+		.attr("fill","white")
+		.attr("pointer-events","all");*/
+	
+	d3.selectAll("svg ").remove();
+	
+	svg = d3.select("#chart_placeholder").append("svg")
+	.attr("width", width)
+	.attr("height", height)
+	.append("g")
+	.attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+	
+	d3.csv(rawData, function(data) {
 		var totSum = 0;
 		dataset = data;
 		//console.log(dataset);
@@ -37,49 +143,30 @@ body {
 				var Val = +dataset[i][keys[j]];
 				totSum += Val;
 				cnImps.push(Val);
-				
+
 			}
 			matrix.push(cnImps);
 		}
-		for (var i=0; i<matrix.length; i++){
-			for (var j=0; j<matrix.length; j++){
-				matrix[i][j] = 100*matrix[i][j]/totSum;
+		for (var i = 0; i < matrix.length; i++) {
+			for (var j = 0; j < matrix.length; j++) {
+				matrix[i][j] = 100 * matrix[i][j] / totSum;
 			}
 		}
-		//console.log(matrix);
-
-
-		/*var matrix = [
-			[11975, 5871, 8916, 2868, 2000],
-			[1951, 10048, 2060, 6171, 3000],
-			[8010, 16145, 8090, 8045, 1000],
-			[1013, 990, 940, 6907, 4502],
-			[3013, 2290, 1940, 1907, 5502]
-		];*/
-
+		
+		//layout = getDefaultLayout(); //create a new layout object
+		//layout.matrix(matrix);
+		
 		var chord = d3.layout.chord()
 			.padding(.05)
 			.sortSubgroups(d3.descending)
 			.matrix(matrix);
 
-		var width = 1000,
-			height = 1000,
-			innerRadius = Math.min(width, height) * .30,
-			outerRadius = innerRadius * 1.1;
-		
-		var colors = d3.scale.category20().range();
-			colors.push("#637939");
-		
-		var fill = d3.scale.ordinal()
-			.domain(d3.range(21))
-			.range(colors);
 
-		var svg = d3.select("body").append("svg")
-			.attr("width", width)
-			.attr("height", height)
-			.append("g")
-			.attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
-		
+			last_layout = chord;
+			
+		//var chordPaths = svg.selectAll("path.chord")
+	      //  .data(chord.chords(), chordKey );
+			
 		var chords = svg.append("g")
 			.attr("class", "chord")
 			.selectAll("path")
@@ -90,30 +177,17 @@ body {
 				return fill(d.target.index);
 			})
 			.style("opacity", 1);
-			
-		chords.append("title").text(function(d){
-				var line1 = "Transfers from " + keys[d["source"]["index"]+1] + " to " + keys[d["target"]["index"]+1] + " : " + Math.floor(d["target"]["value"]*totSum/100).toFixed(1).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
-				var line2 = "Transfers from " + keys[d["target"]["index"]+1] + " to " + keys[d["source"]["index"]+1] + " : " + Math.floor(d["source"]["value"]*totSum/100).toFixed(1).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
-				return line1 + "\n" + line2;
-			});
-		
-			
-		function fade_single(opacity) {
-			  return function() {
-			    var me = this;
-			    svg.selectAll("g.chord path")
-			        .filter(function(d) {
-			          return this != me;
-			        })
-			      .transition()
-			        .style("opacity", opacity);
-			  };
-			}
-		
-			
+
+		 	chords.append("title").text(function(d) {
+			var line1 = "Transfers from " + keys[d["source"]["index"] + 1] + " to " + keys[d["target"]["index"] + 1] + " : " + Math.floor(d["target"]["value"] * totSum / 100).toFixed(1).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
+			var line2 = "Transfers from " + keys[d["target"]["index"] + 1] + " to " + keys[d["source"]["index"] + 1] + " : " + Math.floor(d["source"]["value"] * totSum / 100).toFixed(1).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
+			return line1 + "\n" + line2;
+		});
+
 		chords.on("mouseover", fade_single(.1))
 			.on("mouseout", fade_single(1));
-		
+
+		//Create arcs for different countries
 		var paths = svg.append("g").selectAll("path")
 			.data(chord.groups)
 			.enter().append("path")
@@ -126,76 +200,69 @@ body {
 			.attr("d", d3.svg.arc().innerRadius(innerRadius).outerRadius(outerRadius))
 			.on("mouseover", fade(.1))
 			.on("mouseout", fade(1));
-			
 
-			
-		var ticks = svg.append("g").selectAll("g")
-			.data(chord.groups)
-			.enter().append("g").selectAll("g")
-			.data(groupTicks)
-			.enter().append("g")
-			.attr("transform", function(d) {
-				return "rotate(" + (d.angle * 180 / Math.PI - 90) + ")" + "translate(" + outerRadius + ",0)";
-			});
-
-		/*ticks.append("line")
-			.attr("x1", 1)
-			.attr("y1", 0)
-			.attr("x2", 5)
-			.attr("y2", 0)
-			.style("stroke", "#000");*/
-
-		/*ticks.append("text")
-			.attr("x", 8)
-			.attr("dy", ".35em")
-			.attr("transform", function(d) {
-				return d.angle > Math.PI ? "rotate(180)translate(-16)" : null;
-			})
-			.style("text-anchor", function(d) {
-				return d.angle > Math.PI ? "end" : null;
-			})
-			.text(function(d) {
-				return d.label;
-			});*/
-
-		
-		
+		//Text around paths, name of countries
 		svg.append("g").selectAll("path")
 			.data(chord.groups)
 			.enter().append("svg:text")
-	        .each(function(d) { d.angle = (d.startAngle + d.endAngle) / 2; })
-	        .attr("dy", ".35em")
-	        .attr("text-anchor", function(d) { return d.angle > Math.PI ? "end" : null; })
-	        .attr("transform", function(d) {
-	          return "rotate(" + (d.angle * 180 / Math.PI - 90) + ")"
-	              + "translate(" + (innerRadius + 50) + ")"
-	              + (d.angle > Math.PI ? "rotate(180)" : "");
-	        })
-	        .text(function(d) {return keys[d.index+1]; });
-
-		// Returns an array of tick angles and labels, given a group.
-
-		function groupTicks(d) {
-			var k = (d.endAngle - d.startAngle) / d.value;
-			return d3.range(0, d.value, 1000).map(function(v, i) {
-				return {
-					angle: v * k + d.startAngle,
-					label: i % 5 ? null : v / 1000 + "k"
-				};
+			.each(function(d) {
+				d.angle = (d.startAngle + d.endAngle) / 2;
+			})
+			.attr("dy", ".35em")
+			.attr("text-anchor", function(d) {
+				return d.angle > Math.PI ? "end" : null;
+			})
+			.attr("transform", function(d) {
+				return "rotate(" + (d.angle * 180 / Math.PI - 90) + ")" + "translate(" + (outerRadius+2) + ")" + (d.angle > Math.PI ? "rotate(180)" : "");
+			})
+			.text(function(d) {
+				return keys[d.index + 1];
 			});
-		}
 
-		// Returns an event handler for fading a given chord group.
-
-		function fade(opacity) {
-			return function(g, i) {
-				svg.selectAll(".chord path")
-					.filter(function(d) {
-						return d.source.index != i && d.target.index != i;
-					})
-					.transition()
-					.style("opacity", opacity);
-			};
-		}
 	}); 
-</script>
+}
+	
+
+
+	
+	updateChords("Top/2001A.csv");
+	
+	/* Activate the buttons and link to data sets */
+	d3.select("#Y2001").on("click", function () {
+	    updateChords( "Top/2001A.csv" );
+	    disableButton(this);
+	});
+
+	d3.select("#Y2002").on("click", function() {
+	    updateChords( "Top/2002A.csv" );
+	    disableButton(this);
+	});
+
+	d3.select("#Y2003").on("click", function() {
+	    updateChords( "Top/2003A.csv" );
+	    disableButton(this);
+	});
+	
+	d3.select("#Y2004").on("click", function() {
+	    updateChords( "Top/2004A.csv" );
+	    disableButton(this);
+	});
+	
+	d3.select("#Y2005").on("click", function() {
+	    updateChords( "Top/2005A.csv" );
+	    disableButton(this);
+	});
+	
+	d3.select("#Y2006").on("click", function() {
+	    updateChords( "Top/2006A.csv" );
+	    disableButton(this);
+	});
+	
+	function disableButton(buttonNode) {
+	    d3.selectAll("button")
+	        .attr("disabled", function(d) {
+	            return this === buttonNode? "true": null;
+	        });
+	}
+	
+	</script>

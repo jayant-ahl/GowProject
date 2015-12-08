@@ -12,6 +12,8 @@ body {
   stroke-width: .5px;
 }
 
+
+
 form {
   text-align: center;
 }
@@ -82,11 +84,13 @@ var svg = d3.select("#chart_placeholder").append("svg")
     .attr("r", outerRadius);*/
 	
 function fade_single(opacity) {
-		return function() {
+		return function(g,i) {
 			var me = this;
-			svg.selectAll("g.chord path")
+			svg.selectAll(".chord path")
 				.filter(function(d) {
-					return this != me;
+					//return d.target.index == i;
+					
+					return me!=this;
 				})
 				.transition()
 				.style("opacity", opacity);
@@ -158,6 +162,7 @@ function updateChords(rawData){
 		var keys = Object.keys(dataset[0]);
 		var cName = keys[0];
 		var matrix = [];
+		var modMatrix = [];
 		for (var i = 0; i < dataset.length; i++) {
 			//console.log(dataset[i][keys[0]]);
 			var cnImps = [];
@@ -168,6 +173,7 @@ function updateChords(rawData){
 
 			}
 			matrix.push(cnImps);
+			
 		}
 		for (var i = 0; i < matrix.length; i++) {
 			for (var j = 0; j < matrix.length; j++) {
@@ -203,6 +209,7 @@ function updateChords(rawData){
 		 	chords.append("title").text(function(d) {
 			var line1 = "Transfers from " + keys[d["source"]["index"] + 1] + " to " + keys[d["target"]["index"] + 1] + " : " + Math.floor(d["target"]["value"] * totSum / 100).toFixed(1).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
 			var line2 = "Transfers from " + keys[d["target"]["index"] + 1] + " to " + keys[d["source"]["index"] + 1] + " : " + Math.floor(d["source"]["value"] * totSum / 100).toFixed(1).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
+			//console.log(d);
 			return line1 + "\n" + line2;
 		});
 
@@ -210,7 +217,7 @@ function updateChords(rawData){
 			.on("mouseout", fade_single(1));
 
 		//Create arcs for different countries
-		var paths = svg.append("g").selectAll("path")
+		var paths = svg.selectAll("g.path")
 			.data(chord.groups)
 			.enter().append("path")
 			.style("fill", function(d) {
@@ -219,9 +226,11 @@ function updateChords(rawData){
 			.style("stroke", function(d) {
 				return fill(d.index);
 			})
-			.attr("d", d3.svg.arc().innerRadius(innerRadius).outerRadius(outerRadius))
+			.attr("d", d3.svg.arc().innerRadius(innerRadius).outerRadius(outerRadius)) 
 			.on("mouseover", fade(.1))
 			.on("mouseout", fade(1));
+		
+				
 
 		//Text around paths, name of countries
 		svg.append("g").selectAll("path")
@@ -240,7 +249,21 @@ function updateChords(rawData){
 			.text(function(d) {
 				return keys[d.index + 1];
 			});
-
+		
+			//paths.selectAll().textContent.remove();
+			paths.append("title").text(function(d){
+				var imports = 0;
+				var exports = 0;
+				for (var i = 0; i<matrix.length; i++){
+					imports+=matrix[d.index][i]
+				}
+				
+				for (var i = 0; i<matrix.length; i++){
+					exports+=matrix[i][d.index]
+				}
+				
+				return keys[d.index+1] + "\n" + "Total Imports: " + Math.floor(totSum*imports/100).toFixed(1).replace(/(\d)(?=(\d{3})+\.)/g, '$1,') + "\nTotal Exports: " + Math.floor(totSum*exports/100).toFixed(1).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
+			});
 	}); 
 }
 	

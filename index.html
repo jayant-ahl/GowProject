@@ -31,23 +31,23 @@ World Trade Network
 
 <form>
 	Year: 
-    <input type="radio" name="Year" value="2001" onclick="onClick(this)" checked>2001
-    <input type="radio" name="Year" value="2002" onclick="onClick(this)">2002
-	<input type="radio" name="Year" value="2003" onclick="onClick(this)">2003
-	<input type="radio" name="Year" value="2004" onclick="onClick(this)">2004
-	<input type="radio" name="Year" value="2005" onclick="onClick(this)">2005
-	<input type="radio" name="Year" value="2006" onclick="onClick(this)">2006
+    <input type="radio" name="Year" value="2001" onclick="onClick()" checked>2001
+    <input type="radio" name="Year" value="2002" onclick="onClick()">2002
+	<input type="radio" name="Year" value="2003" onclick="onClick()">2003
+	<input type="radio" name="Year" value="2004" onclick="onClick()">2004
+	<input type="radio" name="Year" value="2005" onclick="onClick()">2005
+	<input type="radio" name="Year" value="2006" onclick="onClick()">2006
 </form>
 
 <form>
 	Commodity Groups: 
-    <input type="radio" name="Group" value="A" onclick="onClick(this)" checked>All
-    <input type="radio" name="Group" value="g1" onclick="onClick(this)">Group 1
-	<input type="radio" name="Group" value="g2" onclick="onClick(this)">Group 2
-	<input type="radio" name="Group" value="g3" onclick="onClick(this)">Group 3
-	<input type="radio" name="Group" value="g4" onclick="onClick(this)">Group 4
-	<input type="radio" name="Group" value="g5" onclick="onClick(this)">Group 5
-	<input type="radio" name="Group" value="g6" onclick="onClick(this)">Group 6
+    <input type="radio" name="Group" value="A" onclick="onClick()" checked>All
+    <input type="radio" name="Group" value="g1" onclick="onClick()">Group 1
+	<input type="radio" name="Group" value="g2" onclick="onClick()">Group 2
+	<input type="radio" name="Group" value="g3" onclick="onClick()">Group 3
+	<input type="radio" name="Group" value="g4" onclick="onClick()">Group 4
+	<input type="radio" name="Group" value="g5" onclick="onClick()">Group 5
+	<input type="radio" name="Group" value="g6" onclick="onClick()">Group 6
 </form>
 
 <div id = "chart_placeholder" style="text-align:center;"></div>
@@ -55,7 +55,8 @@ World Trade Network
 <script src= "d3/d3.js" > 
 </script>
 	
-
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js">
+</script>
 	
 <script>
 	var dataset = [];
@@ -147,7 +148,7 @@ function updateChords(rawData){
 		.attr("fill","white")
 		.attr("pointer-events","all");*/
 	
-	d3.selectAll("svg ").remove();
+	d3.selectAll("svg").remove();
 	
 	svg = d3.select("#chart_placeholder").append("svg")
 	.attr("width", width)
@@ -204,7 +205,7 @@ function updateChords(rawData){
 			.style("fill", function(d) {
 				return fill(d.target.index);
 			})
-			.style("opacity", 1);
+			.style("opacity", 0);
 
 		 	chords.append("title").text(function(d) {
 			var line1 = "Transfers from " + keys[d["source"]["index"] + 1] + " to " + keys[d["target"]["index"] + 1] + " : " + Math.floor(d["target"]["value"] * totSum / 100).toFixed(1).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
@@ -227,13 +228,14 @@ function updateChords(rawData){
 				return fill(d.index);
 			})
 			.attr("d", d3.svg.arc().innerRadius(innerRadius).outerRadius(outerRadius)) 
+			.style("opacity", 0)
 			.on("mouseover", fade(.1))
 			.on("mouseout", fade(1));
 		
 				
 
 		//Text around paths, name of countries
-		svg.append("g").selectAll("path")
+		var textLab = svg.append("g").selectAll("path")
 			.data(chord.groups)
 			.enter().append("svg:text")
 			.each(function(d) {
@@ -248,7 +250,8 @@ function updateChords(rawData){
 			})
 			.text(function(d) {
 				return keys[d.index + 1];
-			});
+			})
+			.style("opacity",0);
 		
 			//paths.selectAll().textContent.remove();
 			paths.append("title").text(function(d){
@@ -262,8 +265,13 @@ function updateChords(rawData){
 					exports+=matrix[i][d.index]
 				}
 				
-				return keys[d.index+1] + "\n" + "Total Imports: " + Math.floor(totSum*imports/100).toFixed(1).replace(/(\d)(?=(\d{3})+\.)/g, '$1,') + "\nTotal Exports: " + Math.floor(totSum*exports/100).toFixed(1).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
+				return keys[d.index+1] + "\n" + "Total Imports: " + (totSum*imports/100).toFixed(1).replace(/(\d)(?=(\d{3})+\.)/g, '$1,') + "\nTotal Exports: " + (totSum*exports/100).toFixed(1).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
 			});
+			
+			textLab.transition().style("opacity",1).duration(1000).delay(100);
+			paths.transition().style("opacity",1).duration(1000).delay(1000);
+			chords.transition().style("opacity",1).duration(1000).delay(2000);
+			
 	}); 
 }
 	
@@ -273,52 +281,17 @@ function updateChords(rawData){
 	//updateChords("Top/2001A.csv");
 	var group = d3.select('input[name="Group"]:checked').node().value
 	var varYear = "Top/" + d3.select('input[name="Year"]:checked').node().value + group + ".csv";
+	
 	updateChords(varYear);
+	$('svg').fadeIn(1000);
 	
-	
-	function onClick(Year) {
+	function onClick() {
 		var group = d3.select('input[name="Group"]:checked').node().value
 		var varYear = "Top/" + d3.select('input[name="Year"]:checked').node().value + group + ".csv";
-	    updateChords(varYear);
+		svg.transition().style("opacity",0).duration(1000).delay(100);
+	    setTimeout(updateChords(varYear), 1000);
 	}
 	
-	/* Activate the buttons and link to data sets */
-	/*
-	d3.select("#Y2001").on("click", function () {
-	    updateChords( "Top/2001A.csv" );
-	    disableButton(this);
-	});
-
-	d3.select("#Y2002").on("click", function() {
-	    updateChords( "Top/2002A.csv" );
-	    disableButton(this);
-	});
-
-	d3.select("#Y2003").on("click", function() {
-	    updateChords( "Top/2003A.csv" );
-	    disableButton(this);
-	});
 	
-	d3.select("#Y2004").on("click", function() {
-	    updateChords( "Top/2004A.csv" );
-	    disableButton(this);
-	});
-	
-	d3.select("#Y2005").on("click", function() {
-	    updateChords( "Top/2005A.csv" );
-	    disableButton(this);
-	});
-	
-	d3.select("#Y2006").on("click", function() {
-	    updateChords( "Top/2006A.csv" );
-	    disableButton(this);
-	});
-	
-	function disableButton(buttonNode) {
-	    d3.selectAll("button")
-	        .attr("disabled", function(d) {
-	            return this === buttonNode? "true": null;
-	        });
-	}*/
 	
 	</script>

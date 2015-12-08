@@ -1,4 +1,4 @@
-<!DOCTYPE html > <meta charset = "utf-8">
+<!DOCTYPE html> <meta charset = "utf-8">
 
 <style>
 
@@ -12,20 +12,42 @@ body {
   stroke-width: .5px;
 }
 
+form {
+  text-align: center;
+}
+
+p {
+    margin-bottom: 3cm;
+}
+
 </style>
 <head>
 <title >
 World Trade Network
 </title>	
-	
 </head>
 
-<button id = "Y2001" disabled="true">2001</button> 
-<button id = "Y2002">2002</button>
-<button id = "Y2003">2003</button> 
-<button id = "Y2004">2004</button> 
-<button id = "Y2005">2005</button> 
-<button id = "Y2006">2006</button> 
+<form>
+	Year: 
+    <input type="radio" name="Year" value="2001" onclick="onClick(this)" checked>2001
+    <input type="radio" name="Year" value="2002" onclick="onClick(this)">2002
+	<input type="radio" name="Year" value="2003" onclick="onClick(this)">2003
+	<input type="radio" name="Year" value="2004" onclick="onClick(this)">2004
+	<input type="radio" name="Year" value="2005" onclick="onClick(this)">2005
+	<input type="radio" name="Year" value="2006" onclick="onClick(this)">2006
+</form>
+
+<form>
+	Commodity Groups: 
+    <input type="radio" name="Group" value="A" onclick="onClick(this)" checked>All
+    <input type="radio" name="Group" value="g1" onclick="onClick(this)">Group 1
+	<input type="radio" name="Group" value="g2" onclick="onClick(this)">Group 2
+	<input type="radio" name="Group" value="g3" onclick="onClick(this)">Group 3
+	<input type="radio" name="Group" value="g4" onclick="onClick(this)">Group 4
+	<input type="radio" name="Group" value="g5" onclick="onClick(this)">Group 5
+	<input type="radio" name="Group" value="g6" onclick="onClick(this)">Group 6
+</form>
+
 <div id = "chart_placeholder" style="text-align:center;"></div>
 
 <script src= "d3/d3.js" > 
@@ -225,9 +247,20 @@ function updateChords(rawData){
 
 
 	
-	updateChords("Top/2001A.csv");
+	//updateChords("Top/2001A.csv");
+	var group = d3.select('input[name="Group"]:checked').node().value
+	var varYear = "Top/" + d3.select('input[name="Year"]:checked').node().value + group + ".csv";
+	updateChords(varYear);
+	
+	
+	function onClick(Year) {
+		var group = d3.select('input[name="Group"]:checked').node().value
+		var varYear = "Top/" + d3.select('input[name="Year"]:checked').node().value + group + ".csv";
+	    updateChords(varYear);
+	}
 	
 	/* Activate the buttons and link to data sets */
+	/*
 	d3.select("#Y2001").on("click", function () {
 	    updateChords( "Top/2001A.csv" );
 	    disableButton(this);
@@ -263,6 +296,6 @@ function updateChords(rawData){
 	        .attr("disabled", function(d) {
 	            return this === buttonNode? "true": null;
 	        });
-	}
+	}*/
 	
 	</script>

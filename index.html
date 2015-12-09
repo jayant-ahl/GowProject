@@ -1,4 +1,4 @@
-<!DOCTYPE html> <meta charset = "utf-8">
+<!DOCTYPE html> <meta charset = "utf-8" >
 
 <style>
 
@@ -59,9 +59,10 @@ World Trade Network
 </script>
 	
 <script>
-	var dataset = [];
-	var matrix = [];
-	var rawData = "Top/2001A.csv ";
+
+var dataset = [];
+var matrix = [];
+var rawData = "Top/2001A.csv ";
 
 var width = 800,
 	height = 800,
@@ -267,12 +268,26 @@ function updateChords(rawData){
 				
 				return keys[d.index+1] + "\n" + "Total Imports: " + (totSum*imports/100).toFixed(1).replace(/(\d)(?=(\d{3})+\.)/g, '$1,') + "\nTotal Exports: " + (totSum*exports/100).toFixed(1).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
 			});
+			//console.log(paths);
+			if(first) {
+			textLab.transition().style("opacity",1).duration(1000).delay(function(d){
+				 return d.index * 100;
+			 });
 			
-			textLab.transition().style("opacity",1).duration(1000).delay(100);
-			paths.transition().style("opacity",1).duration(1000).delay(1000);
-			chords.transition().style("opacity",1).duration(1000).delay(2000);
+			paths.transition().style("opacity",1).duration(1000).delay(function(d){ 
+				return d.index * 100;
+			});
 			
-	}); 
+			chords.transition().style("opacity",1).duration(1000).delay(2200);
+			first = false;
+		}
+		else {
+			textLab.transition().style("opacity",1).duration(100).delay(100);
+			paths.transition().style("opacity",1).duration(100).delay(100);
+			chords.transition().style("opacity",1).duration(100).delay(100);
+		}
+			
+	});
 }
 	
 
@@ -281,17 +296,15 @@ function updateChords(rawData){
 	//updateChords("Top/2001A.csv");
 	var group = d3.select('input[name="Group"]:checked').node().value
 	var varYear = "Top/" + d3.select('input[name="Year"]:checked').node().value + group + ".csv";
-	
+	var first = true;
 	updateChords(varYear);
-	$('svg').fadeIn(1000);
+	
 	
 	function onClick() {
 		var group = d3.select('input[name="Group"]:checked').node().value
 		var varYear = "Top/" + d3.select('input[name="Year"]:checked').node().value + group + ".csv";
 		svg.transition().style("opacity",0).duration(1000).delay(100);
-	    setTimeout(updateChords(varYear), 1000);
+	    updateChords(varYear);
 	}
-	
-	
 	
 	</script>

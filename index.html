@@ -12,7 +12,10 @@ body {
   stroke-width: .5px;
 }
 
-
+text {
+	font-family: "sans-serif";
+	font-size: "30px";
+}
 
 form {
   text-align: center;
@@ -37,6 +40,14 @@ World Trade Network
 	<input type="radio" name="Year" value="2004" onclick="onClick()">2004
 	<input type="radio" name="Year" value="2005" onclick="onClick()">2005
 	<input type="radio" name="Year" value="2006" onclick="onClick()">2006
+	<input type="radio" name="Year" value="2007" onclick="onClick()">2007
+	<input type="radio" name="Year" value="2008" onclick="onClick()">2008
+	<input type="radio" name="Year" value="2009" onclick="onClick()">2009
+	<input type="radio" name="Year" value="2010" onclick="onClick()">2010
+	<input type="radio" name="Year" value="2011" onclick="onClick()">2011
+	<input type="radio" name="Year" value="2012" onclick="onClick()">2012
+	<input type="radio" name="Year" value="2013" onclick="onClick()">2013
+	<input type="radio" name="Year" value="2014" onclick="onClick()">2014
 </form>
 
 <form>
@@ -144,10 +155,6 @@ function chordKey(data) {
 var last_layout;
 
 function updateChords(rawData){
-	/*svg.append("circle")
-    	.attr("r", outerRadius+200)
-		.attr("fill","white")
-		.attr("pointer-events","all");*/
 	
 	d3.selectAll("svg").remove();
 	
@@ -252,7 +259,8 @@ function updateChords(rawData){
 			.text(function(d) {
 				return keys[d.index + 1];
 			})
-			.style("opacity",0);
+			.style("opacity",0)
+			.style("font-size","20px");
 		
 			//paths.selectAll().textContent.remove();
 			paths.append("title").text(function(d){
@@ -269,7 +277,7 @@ function updateChords(rawData){
 				return keys[d.index+1] + "\n" + "Total Imports: " + (totSum*imports/100).toFixed(1).replace(/(\d)(?=(\d{3})+\.)/g, '$1,') + "\nTotal Exports: " + (totSum*exports/100).toFixed(1).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
 			});
 			//console.log(paths);
-			if(first) {
+		if(first) {
 			textLab.transition().style("opacity",1).duration(1000).delay(function(d){
 				 return d.index * 100;
 			 });
